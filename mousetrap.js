@@ -221,6 +221,16 @@
         return String.fromCharCode(e.which).toLowerCase();
     }
 
+    /** START LIGHT TABLE ADDED FUNCTION **/
+    function keyDownOnly(e) {
+      if (_MAP[e.which]) {
+          return _MAP[e.which];
+      }
+
+      return false;
+    }
+    /** END LIGHT TABLE ADDED FUNCTION **/
+
     /**
      * checks if two arrays are equal
      *
@@ -701,6 +711,12 @@
             _ignoreNextKeypress = processedSequenceCallback && e.type == 'keydown';
         };
 
+        /** START LIGHT TABLE ADDED FUNCTION **/
+        function _handleKeyUp() {
+
+        };
+        /** END LIGHT TABLE ADDED FUNCTION **/
+
         /**
          * handles a keydown event
          *
@@ -728,7 +744,23 @@
                 return;
             }
 
-            self.handleKey(character, _eventModifiers(e), e);
+            /** START LIGHT TABLE DEVIATION **/
+            // REPLACED `self.handleKey(character, _eventModifiers(e), e);`  with
+            if (e.type == 'keydown' && (keyDownOnly(e) || e.ctrlKey || e.metaKey || e.altKey)) {
+              Mousetrap.handleKey(character, "", e);
+            } else if (e.type == 'keydown') {
+              Mousetrap._prev_keycode = character;
+            } else if (e.type == 'keypress') {
+              var _keyCode = Mousetrap._prev_keycode;
+              Mousetrap._prev_keycode = null;
+              Mousetrap._prev_char = character;
+              Mousetrap.handleKey(_keyCode, character, e);
+            } else if (e.type == 'keyup') {
+              var _char = Mousetrap._prev_char;
+              Mousetrap._prev_char = null;
+              Mousetrap.handleKeyUp(character, _char, e);
+            }
+            /** END LIGHT TABLE DEVIATION **/
         }
 
         /**
@@ -987,6 +1019,16 @@
         var self = this;
         return self._handleKey.apply(self, arguments);
     };
+
+    /** START LIGHT TABLE ADDED FUNCTION **/
+    /**
+     * exposes _handleKeyUp publicly so it can be overwritten by extensions
+     */
+    Mousetrap.prototype.handleKeyUp = function() {
+        var self = this;
+        return self._handleKeyUp.apply(self, arguments);
+    };
+    /** END LIGHT TABLE ADDED FUNCTION **/
 
     /**
      * allow custom key mappings
